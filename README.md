@@ -4,7 +4,7 @@ Projeto de aprendizado de máquina supervisionado que usa dados reais de cronome
 
 ## Objetivo
 
-O tempo de volta resulta de efeitos que atuam ao mesmo tempo: o carro fica mais rápido conforme queima combustível e mais lento conforme o pneu desgasta. Além disso, cada composto (macio, médio e duro) desgasta em um ritmo diferente.
+O tempo de volta resulta de efeitos que atuam ao mesmo tempo: o carro fica mais rápido conforme queima combustível e mais lento conforme o pneu desgasta. Além disso, cada composto (macio, médio ou duro) pode desgastar em um ritmo diferente. Nesta corrida, após a limpeza dos dados, só restaram voltas com os compostos macio (SOFT) e duro (HARD).
 
 O projeto compara como três modelos lidam com essa interação entre desgaste e composto:
 
@@ -28,18 +28,21 @@ Voltas do **GP do Bahrein de 2024**, obtidas com a biblioteca [FastF1](https://d
 
 ## Resultados
 
-<!-- Preencha com os valores obtidos ao executar o notebook -->
+Métricas no conjunto de teste (195 voltas) e MAE médio da validação cruzada com 5 folds no treino (779 voltas):
 
-| Modelo | MAE (s) | RMSE (s) | R² |
-|---|---|---|---|
-| Baseline (média) | | | |
-| Regressão Linear | | | |
-| Regressão Linear + interação | | | |
-| Random Forest | | | |
+| Modelo | MAE (s) | RMSE (s) | R² | MAE CV (s) |
+|---|---|---|---|---|
+| Baseline (média) | 0,977 | 1,173 | −0,012 | — |
+| Regressão Linear | 0,259 | 0,370 | 0,900 | 0,306 ± 0,017 |
+| Regressão Linear + interação | 0,259 | 0,369 | 0,900 | 0,306 ± 0,017 |
+| Random Forest | 0,286 | 0,394 | 0,886 | 0,304 ± 0,002 |
 
 ## Principais conclusões
 
-<!-- Escreva com suas palavras o que os resultados mostraram -->
+- **Todos os modelos superam com folga o baseline:** o MAE cai de 0,98 s para cerca de 0,26 s no teste. O MAE da validação cruzada (≈ 0,31 s) é a estimativa mais confiável, já que a divisão aleatória por volta deixa o teste otimista.
+- **A interação não trouxe ganho:** com só SOFT e HARD após a limpeza, os dados desta corrida não mostram uma diferença de desgaste entre compostos que o modelo aditivo não capte.
+- **O Random Forest não superou a Regressão Linear:** foi pior no teste, empatou na validação cruzada e mostrou overfitting (R² de 0,980 no treino contra 0,886 no teste).
+- **Os efeitos principais têm o sinal esperado:** ≈ +0,11 s por volta de uso do pneu e ≈ −0,07 s por volta de corrida (queima de combustível). Os coeficientes de temperatura não devem ser interpretados, por causa da colinearidade com o número da volta.
 
 ## Limitações
 
@@ -51,18 +54,19 @@ Voltas do **GP do Bahrein de 2024**, obtidas com a biblioteca [FastF1](https://d
 
 Python · FastF1 · pandas · NumPy · scikit-learn · matplotlib · seaborn
 
+> [!WARNING]
+> **A FastF1 pode não funcionar em ambientes de nuvem, como o Google Colab.** Durante o desenvolvimento, o servidor de cronometragem da F1 retornou `403 Forbidden` para conexões vindas do Colab, e a FastF1 exibe isso como `SessionNotAvailableError`, mesmo para corridas que existem. Para baixar os dados, rode o notebook **localmente**. Os dados desta corrida já estão incluídos em `dados/`, então o notebook também funciona sem acesso ao servidor.
+
 ## Como executar
 
 ```bash
-git clone https://github.com/SaulinS/f1-tempo-de-volta.git
-cd f1-tempo-de-volta
+git clone https://github.com/SaulinS/Bahrein-Fast-Lap.git
+cd Bahrein-Fast-Lap
 pip install -r requirements.txt
 jupyter notebook tempo_de_volta_f1.ipynb
 ```
 
-Também funciona no Google Colab: basta fazer upload do notebook e executar todas as células.
-
-Na primeira execução, a FastF1 baixa os dados da corrida e guarda em cache na pasta `cache_fastf1/`.
+O notebook lê os dados de `dados/bahrain_2024_voltas.parquet`. Se você trocar a corrida, a FastF1 baixa os dados (com cache em `cache_fastf1/`) e salva as colunas usadas em um novo arquivo dentro de `dados/`.
 
 ## Próximos passos
 
